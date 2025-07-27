@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Teori Keputusan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bs-primary: #005A9C;
+            --bs-primary-rgb: 0, 90, 156;
+            --bs-secondary: #495057;
+            --bs-light: #f8f9fa;
+            --bs-dark: #212529;
+            --background-color: #eef2f7;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--bs-dark);
+        }
+
+        .container-main {
+            max-width: 1200px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, #005A9C, #003D6B);
+            color: white;
+            border-radius: 0 0 1.5rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-weight: 700;
+        }
+
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background-color: var(--bs-primary);
+            color: white;
+            font-weight: 500;
+            border-radius: 1rem 1rem 0 0 !important;
+            padding: 1rem 1.5rem;
+            border-bottom: 0;
+        }
+
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.3);
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 0.5rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        #analysis-section .nav-pills .nav-link {
+            color: var(--bs-primary);
+        }
+
+        #analysis-section .nav-pills .nav-link.active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+
+        .result-card {
+            background-color: var(--bs-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .calculation-step {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--bs-primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .calculation-step h6 {
+            color: var(--bs-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .math-formula {
+            background-color: #e9ecef;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 0.5rem 0;
+        }
+
+        .alert-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 250px;
+            border-radius: 0.75rem;
+        }
+
+        .fade-in {
+            animation: fadeInAnimation 0.5s ease-in-out;
+        }
+
+        @keyframes fadeInAnimation {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-main container my-4">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i>Program Teori Keputusan</h1>
+            <p class="lead mb-0">Alat bantu analisis untuk Riset Operasional (Cost Minimization)</p>
+        </div>
+
+        <div id="alert-placeholder"></div>
+
+        <div class="card" id="setup-card">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs"></i> Langkah 1: Tentukan Ukuran Matriks</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="numAlternatives" class="form-label">Jumlah Alternatif</label>
+                        <input type="number" class="form-control" id="numAlternatives" value="3" min="1" max="10">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="numStates" class="form-label">Jumlah Kondisi (States)</label>
+                        <input type="number" class="form-control" id="numStates" value="3" min="1" max="10">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-primary w-100" onclick="generateMatrixInputs()">
+                            <i class="fas fa-table-cells-large"></i> Buat Form Matriks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4 d-none" id="matrix-input-card">
+            <div class="card-header">
+                <h5><i class="fas fa-keyboard"></i> Langkah 2: Isi Nama dan Nilai Biaya (Cost)</h5>
+            </div>
+            <div class="card-body p-4">
+                <div id="matrix-input-container"></div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-none fade-in" id="analysis-section">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-check-circle"></i> Matriks Biaya yang Digunakan</h5>
+                </div>
+                <div class="card-body" id="matrix-display-container">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie"></i> Langkah 3: Pilih Jenis Analisis</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="nav flex-column nav-pills me-4" id="v-pills-tab" role="tablist"
+                            aria-orientation="vertical">
+                            <button class="nav-link active" id="v-pills-ketidakpastian-tab" data-bs-toggle="pill"
+                                data-bs-target="#v-pills-ketidakpastian" type="button" role="tab"><i
+                                    class="fas fa-question-circle fa-fw me-2"></i>Ketidakpastian</button>
+                            <button class="nav-link" id="v-pills-beresiko-tab" data-bs-toggle="pill"
+                                data-bs-target="#v-pills-beresiko" type="button" role="tab"><i
+                                    class="fas fa-dice fa-fw me-2"></i>Beresiko</button>
+                            <button class="nav-link" id="v-pills-pasti-tab" data-bs-toggle="pill"
+                                data-bs-target="#v-pills-pasti" type="button" role="tab"><i
+                                    class="fas fa-bullseye fa-fw me-2"></i>Pasti</button>
+                            <button class="nav-link" id="v-pills-visualisasi-tab" data-bs-toggle="pill"
+                                data-bs-target="#v-pills-visualisasi" type="button" role="tab"><i
+                                    class="fas fa-chart-bar fa-fw me-2"></i>Visualisasi</button>
+                        </div>
+                        <div class="tab-content w-100" id="v-pills-tabContent">
+                            <div class="tab-pane fade show active" id="v-pills-ketidakpastian" role="tabpanel">
+                                <h6>Analisis Kondisi Ketidakpastian</h6>
+                                <p class="text-muted">Gunakan kriteria Maximax (optimis), Maximin (pesimis), dan Laplace
+                                    (realistis) untuk mengambil keputusan tanpa mengetahui probabilitas. <strong>Tujuan: Minimisasi Biaya</strong></p>
+                                <button class="btn btn-primary" onclick="runUncertaintyAnalysis()"><i
+                                        class="fas fa-play"></i> Jalankan Analisis</button>
+                                <div id="uncertainty-results" class="mt-3"></div>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-beresiko" role="tabpanel">
+                                <h6>Analisis Kondisi Beresiko</h6>
+                                <p class="text-muted">Hitung Expected Value (EV) dengan memasukkan probabilitas untuk
+                                    setiap kondisi. <strong>Tujuan: Minimisasi Expected Cost</strong></p>
+                                <div id="probability-inputs" class="mb-3"></div>
+                                <div id="risk-results" class="mt-3"></div>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-pasti" role="tabpanel">
+                                <h6>Analisis Kondisi Pasti</h6>
+                                <p class="text-muted">Pilih satu kondisi yang diyakini pasti akan terjadi untuk
+                                    menemukan alternatif dengan biaya terendah.</p>
+                                <div id="certainty-inputs" class="mb-3"></div>
+                                <div id="certainty-results" class="mt-3"></div>
+                            </div>
+                            <div class="tab-pane fade" id="v-pills-visualisasi" role="tabpanel">
+                                <h6>Visualisasi Data</h6>
+                                <p class="text-muted">Gunakan berbagai jenis grafik untuk mendapatkan wawasan dari data
+                                    biaya dan hasil analisis.</p>
+
+                                <div class="accordion" id="chartAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingOne">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseOne">
+                                                Perbandingan Biaya
+                                            </button>
+                                        </h2>
+                                        <div id="collapseOne" class="accordion-collapse collapse show"
+                                            data-bs-parent="#chartAccordion">
+                                            <div class="accordion-body">
+                                                <button class="btn btn-primary btn-sm mb-3"
+                                                    onclick="generatePayoffCharts()"><i class="fas fa-sync-alt"></i>
+                                                    Buat/Ulang Grafik Biaya</button>
+                                                <canvas id="payoffBarChart"></canvas>
+                                                <hr class="my-4">
+                                                <canvas id="payoffRadarChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingTwo">
+                                            <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                                Analisis Probabilitas & Sensitivitas
+                                            </button>
+                                        </h2>
+                                        <div id="collapseTwo" class="accordion-collapse collapse"
+                                            data-bs-parent="#chartAccordion">
+                                            <div class="accordion-body">
+                                                <p class="text-muted small">Grafik ini akan muncul secara otomatis
+                                                    setelah Anda menjalankan Analisis Beresiko.</p>
+                                                <div class="row">
+                                                    <div class="col-lg-5">
+                                                        <canvas id="probabilityPieChart"></canvas>
+                                                    </div>
+                                                    <div class="col-lg-7">
+                                                        <canvas id="sensitivityLineChart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global state variables
+        let payoffMatrix = [];
+        let alternatives = [];
+        let states = [];
+
+        // Chart instances
+        let payoffBarChartInstance = null;
+        let payoffRadarChartInstance = null;
+        let probabilityPieChartInstance = null;
+        let sensitivityLineChartInstance = null;
+
+        // DOM Elements
+        const setupCard = document.getElementById('setup-card');
+        const matrixInputCard = document.getElementById('matrix-input-card');
+        const analysisSection = document.getElementById('analysis-section');
+        const alertPlaceholder = document.getElementById('alert-placeholder');
+
+        // --- UTILITY FUNCTIONS ---
+        const showAlert = (message, type = 'danger') => {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show alert-custom" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            alertPlaceholder.append(wrapper);
+            setTimeout(() => wrapper.remove(), 4000);
+        }
+
+        const chartColors = [
+            'rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 206, 86, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'
+        ];
+
+        // --- CORE APPLICATION FLOW ---
+
+        function generateMatrixInputs() {
+            const numAlternatives = parseInt(document.getElementById('numAlternatives').value);
+            const numStates = parseInt(document.getElementById('numStates').value);
+
+            if (numAlternatives < 1 || numStates < 1) {
+                showAlert('Jumlah alternatif dan kondisi harus minimal 1.');
+                return;
+            }
+
+            let html = '<div class="fade-in">';
+            html += '<div class="row g-3">';
+            html += '<div class="col-md-6"><h6><i class="fas fa-tasks me-2"></i>Nama Alternatif</h6>';
+            for (let i = 0; i < numAlternatives; i++) {
+                html += `<input type="text" class="form-control mb-2" id="alt-name-${i}" placeholder="Alternatif ${i + 1}" value="Alternatif ${i + 1}">`;
+            }
+            html += '</div>';
+            html += '<div class="col-md-6"><h6><i class="fas fa-cloud-sun-rain me-2"></i>Nama Kondisi</h6>';
+            for (let j = 0; j < numStates; j++) {
+                html += `<input type="text" class="form-control mb-2" id="state-name-${j}" placeholder="Kondisi ${j + 1}" value="Kondisi ${j + 1}">`;
+            }
+            html += '</div></div>';
+            html += '<h6 class="mt-4"><i class="fas fa-coins me-2"></i>Nilai Biaya (Cost)</h6>';
+            html += '<div class="table-responsive"><table class="table table-bordered text-center">';
+            html += '<thead><tr><th class="bg-light">Alternatif</th>';
+            for (let j = 0; j < numStates; j++) {
+                html += `<th class="bg-light" id="header-state-${j}">Kondisi ${j + 1}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            for (let i = 0; i < numAlternatives; i++) {
+                html += `<tr><th class="bg-light" id="header-alt-${i}">Alternatif ${i + 1}</th>`;
+                for (let j = 0; j < numStates; j++) {
+                    html += `<td><input type="number" class="form-control text-center" id="cell-${i}-${j}" value="${Math.floor(Math.random() * 100) + 100}"></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+            html += '<button class="btn btn-success mt-3" onclick="saveMatrix()"><i class="fas fa-save me-2"></i>Simpan & Lanjutkan ke Analisis</button>';
+            html += '</div>';
+
+            document.getElementById('matrix-input-container').innerHTML = html;
+            matrixInputCard.classList.remove('d-none');
+            matrixInputCard.classList.add('fade-in');
+        }
+
+        function saveMatrix() {
+            const numAlternatives = parseInt(document.getElementById('numAlternatives').value);
+            const numStates = parseInt(document.getElementById('numStates').value);
+            alternatives = []; states = []; payoffMatrix = [];
+
+            for (let i = 0; i < numAlternatives; i++) alternatives.push(document.getElementById(`alt-name-${i}`).value);
+            for (let j = 0; j < numStates; j++) states.push(document.getElementById(`state-name-${j}`).value);
+
+            for (let i = 0; i < numAlternatives; i++) {
+                const row = [];
+                for (let j = 0; j < numStates; j++) {
+                    const value = parseFloat(document.getElementById(`cell-${i}-${j}`).value);
+                    if (isNaN(value)) { showAlert(`Nilai pada baris ${i + 1}, kolom ${j + 1} tidak valid.`); return; }
+                    row.push(value);
+                }
+                payoffMatrix.push(row);
+            }
+
+            setupCard.classList.add('d-none');
+            matrixInputCard.classList.add('d-none');
+            analysisSection.classList.remove('d-none');
+
+            displayFinalMatrix();
+            prepareAnalysisInputs();
+            showAlert('Matriks berhasil disimpan. Silakan pilih jenis analisis.', 'success');
+        }
+
+        function displayFinalMatrix() {
+            let html = '<div class="table-responsive"><table class="table table-bordered text-center">';
+            html += '<thead><tr><th class="bg-light">Alternatif</th>';
+            states.forEach(s => html += `<th class="bg-light">${s}</th>`);
+            html += '</tr></thead><tbody>';
+            payoffMatrix.forEach((row, i) => {
+                html += `<tr><th class="bg-light">${alternatives[i]}</th>`;
+                row.forEach(cell => html += `<td>${cell}</td>`);
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            document.getElementById('matrix-display-container').innerHTML = html;
+        }
+
+        function prepareAnalysisInputs() {
+            let probHTML = '<div class="row g-3">';
+            states.forEach((state, i) => {
+                probHTML += `<div class="col-md-4"><label for="prob-${i}" class="form-label">${state}</label><input type="number" id="prob-${i}" class="form-control" step="0.01" min="0" max="1" value="${(1 / states.length).toFixed(2)}"></div>`;
+            });
+            probHTML += '</div><button class="btn btn-primary mt-3" onclick="runRiskAnalysis()"><i class="fas fa-play"></i> Hitung EV</button>';
+            document.getElementById('probability-inputs').innerHTML = probHTML;
+
+            let certainHTML = '<div class="input-group"><label class="input-group-text" for="state-select">Pilih Kondisi</label><select class="form-select" id="state-select">';
+            states.forEach((state, i) => {
+                certainHTML += `<option value="${i}">${state}</option>`;
+            });
+            certainHTML += '</select><button class="btn btn-primary" onclick="runCertaintyAnalysis()"><i class="fas fa-play"></i> Pilih</button></div>';
+            document.getElementById('certainty-inputs').innerHTML = certainHTML;
+        }
+
+        // --- ANALYSIS FUNCTIONS - FIXED FOR MINIMIZATION ---
+
+        function runUncertaintyAnalysis() {
+            let html = '<div class="result-card fade-in">';
+            html += '<h5 class="mb-3">Proses Perhitungan Analisis Ketidakpastian (Cost Minimization)</h5>';
+
+            // Maximax Analysis (FIXED FOR MINIMIZATION)
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-star text-warning"></i> 1. Kriteria Maximax (Optimis)</h6>';
+            html += '<p><strong>Untuk minimisasi biaya:</strong> Mencari nilai minimum dari setiap alternatif, kemudian pilih yang terkecil.</p>';
+
+            const minValues = payoffMatrix.map(row => Math.min(...row));  // CHANGED: min instead of max
+            html += '<div class="math-formula">Nilai minimum tiap alternatif:</div>';
+
+            minValues.forEach((minVal, i) => {
+                const minIndex = payoffMatrix[i].indexOf(minVal);
+                html += `<div>${alternatives[i]}: min(${payoffMatrix[i].join(', ')}) = ${minVal} (pada ${states[minIndex]})</div>`;
+            });
+
+            const maximaxValue = Math.min(...minValues);  // CHANGED: min instead of max
+            const maximaxAlt = alternatives[minValues.indexOf(maximaxValue)];
+            html += `<div class="alert alert-warning mt-2"><strong>Hasil Maximax:</strong> Pilih ${maximaxAlt} dengan nilai ${maximaxValue}</div>`;
+            html += '</div>';
+
+            // Maximin Analysis (FIXED FOR MINIMIZATION)
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-shield-alt text-danger"></i> 2. Kriteria Maximin (Pesimis)</h6>';
+            html += '<p><strong>Untuk minimisasi biaya:</strong> Mencari nilai maksimum dari setiap alternatif, kemudian pilih yang terkecil.</p>';
+
+            const maxValues = payoffMatrix.map(row => Math.max(...row));  // CHANGED: max instead of min
+            html += '<div class="math-formula">Nilai maksimum tiap alternatif:</div>';
+
+            maxValues.forEach((maxVal, i) => {
+                const maxIndex = payoffMatrix[i].indexOf(maxVal);
+                html += `<div>${alternatives[i]}: max(${payoffMatrix[i].join(', ')}) = ${maxVal} (pada ${states[maxIndex]})</div>`;
+            });
+
+            const maximinValue = Math.min(...maxValues);  // CHANGED: min instead of max
+            const maximinAlt = alternatives[maxValues.indexOf(maximinValue)];
+            html += `<div class="alert alert-danger mt-2"><strong>Hasil Maximin:</strong> Pilih ${maximinAlt} dengan nilai ${maximinValue}</div>`;
+            html += '</div>';
+
+            // Laplace Analysis (FIXED FOR MINIMIZATION)
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-balance-scale text-primary"></i> 3. Kriteria Laplace (Realistis)</h6>';
+            html += '<p><strong>Untuk minimisasi biaya:</strong> Menghitung rata-rata dari setiap alternatif, kemudian pilih yang terkecil.</p>';
+
+            const avgValues = payoffMatrix.map(row => row.reduce((a, b) => a + b, 0) / row.length);
+            html += '<div class="math-formula">Rata-rata tiap alternatif:</div>';
+
+            avgValues.forEach((avgVal, i) => {
+                html += `<div>${alternatives[i]}: (${payoffMatrix[i].join(' + ')}) / ${payoffMatrix[i].length} = ${avgVal.toFixed(4)}</div>`;
+            });
+
+            const laplaceValue = Math.min(...avgValues);  // CHANGED: min instead of max
+            const laplaceAlt = alternatives[avgValues.indexOf(laplaceValue)];
+            html += `<div class="alert alert-primary mt-2"><strong>Hasil Laplace:</strong> Pilih ${laplaceAlt} dengan nilai ${laplaceValue.toFixed(4)}</div>`;
+            html += '</div>';
+
+            // Summary
+            html += '<div class="alert alert-info mt-4">';
+            html += '<h6>Ringkasan Hasil (Cost Minimization):</h6>';
+            html += `<ul>`;
+            html += `<li><strong>Maximax (Optimis):</strong> ${maximaxAlt} dengan nilai ${maximaxValue}</li>`;
+            html += `<li><strong>Maximin (Pesimis):</strong> ${maximinAlt} dengan nilai ${maximinValue}</li>`;
+            html += `<li><strong>Laplace (Realistis):</strong> ${laplaceAlt} dengan nilai ${laplaceValue.toFixed(4)}</li>`;
+            html += `</ul>`;
+            html += '</div>';
+
+            html += '</div>';
+            document.getElementById('uncertainty-results').innerHTML = html;
+        }
+
+        function runRiskAnalysis() {
+            const probabilities = states.map((_, i) => parseFloat(document.getElementById(`prob-${i}`).value));
+
+            if (Math.abs(probabilities.reduce((a, b) => a + b, 0) - 1.0) > 0.01) {
+                showAlert('Total probabilitas harus sama dengan 1.0');
+                return;
+            }
+
+            let html = '<div class="result-card fade-in">';
+            html += '<h5 class="mb-3">Proses Perhitungan Expected Value (EV) - Cost Minimization</h5>';
+
+            // Show probability setup
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-dice"></i> 1. Probabilitas yang Digunakan</h6>';
+            html += '<div class="math-formula">Probabilitas kondisi:</div>';
+            states.forEach((state, i) => {
+                html += `<div>P(${state}) = ${probabilities[i]}</div>`;
+            });
+            html += `<div class="mt-2">Total probabilitas = ${probabilities.reduce((a, b) => a + b, 0).toFixed(3)} ✓</div>`;
+            html += '</div>';
+
+            // Calculate EV for each alternative
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-calculator"></i> 2. Perhitungan Expected Value</h6>';
+            html += '<p>Rumus: EV = Σ(Cost × Probabilitas)</p>';
+
+            const expectedValues = payoffMatrix.map((row, i) => {
+                html += `<div class="mt-3"><strong>${alternatives[i]}:</strong></div>`;
+                html += '<div class="math-formula">';
+
+                let calculation = 'EV = ';
+                let terms = [];
+                let ev = 0;
+
+                row.forEach((payoff, j) => {
+                    const term = payoff * probabilities[j];
+                    ev += term;
+                    terms.push(`(${payoff} × ${probabilities[j]})`);
+                });
+
+                calculation += terms.join(' + ');
+                html += `${calculation}</div>`;
+                html += `<div>EV = ${terms.map((_, j) => (row[j] * probabilities[j]).toFixed(4)).join(' + ')}</div>`;
+                html += `<div><strong>EV = ${ev.toFixed(4)}</strong></div>`;
+
+                return ev;
+            });
+
+            html += '</div>';
+
+            // Show results (FIXED FOR MINIMIZATION)
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-trophy"></i> 3. Perbandingan Hasil</h6>';
+            html += '<table class="table table-sm table-bordered"><thead><tr><th>Alternatif</th><th>Expected Value (EV)</th></tr></thead><tbody>';
+
+            const minEV = Math.min(...expectedValues);  // CHANGED: min instead of max
+            const bestAlt = alternatives[expectedValues.indexOf(minEV)];
+
+            expectedValues.forEach((ev, i) => {
+                html += `<tr${i === expectedValues.indexOf(minEV) ? ' class="table-success"' : ''}><td>${alternatives[i]}<td>${ev.toFixed(4)}</td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            html += `<div class="alert alert-success mt-2"><strong>Keputusan Terbaik:</strong> ${bestAlt} dengan EV = ${minEV.toFixed(4)} (biaya terendah)</div>`;
+            html += '</div>';
+
+            html += '</div>';
+            document.getElementById('risk-results').innerHTML = html;
+
+            // Generate probability pie chart
+            generateProbabilityChart(probabilities);
+
+            // Generate sensitivity analysis
+            generateSensitivityChart(expectedValues);
+        }
+
+        function runCertaintyAnalysis() {
+            const selectedStateIndex = parseInt(document.getElementById('state-select').value);
+            const selectedState = states[selectedStateIndex];
+
+            let html = '<div class="result-card fade-in">';
+            html += '<h5 class="mb-3">Proses Analisis Kondisi Pasti (Cost Minimization)</h5>';
+
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-bullseye"></i> 1. Kondisi yang Dipilih</h6>';
+            html += `<p>Kondisi yang diyakini pasti terjadi: <strong>${selectedState}</strong></p>`;
+            html += '</div>';
+
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-list"></i> 2. Nilai Biaya untuk Kondisi Ini</h6>';
+            html += '<table class="table table-sm table-bordered"><thead><tr><th>Alternatif</th><th>Biaya</th></tr></thead><tbody>';
+
+            const payoffValues = payoffMatrix.map(row => row[selectedStateIndex]);
+            const minPayoff = Math.min(...payoffValues);  // CHANGED: min instead of max
+            const bestAltIndex = payoffValues.indexOf(minPayoff);
+
+            payoffValues.forEach((payoff, i) => {
+                html += `<tr${i === bestAltIndex ? ' class="table-success"' : ''}><td>${alternatives[i]}</td><td>${payoff}</td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            html += '</div>';
+
+            html += '<div class="calculation-step">';
+            html += '<h6><i class="fas fa-crown"></i> 3. Keputusan Optimal</h6>';
+            html += `<p>Dari semua alternatif, nilai biaya terendah adalah ${minPayoff}.</p>`;  // CHANGED: terendah instead of tertinggi
+            html += `<div class="alert alert-success"><strong>Keputusan Terbaik:</strong> ${alternatives[bestAltIndex]} dengan biaya ${minPayoff}</div>`;
+            html += '</div>';
+
+            html += '</div>';
+            document.getElementById('certainty-results').innerHTML = html;
+        }
+
+        // --- VISUALIZATION FUNCTIONS ---
+
+        function generatePayoffCharts() {
+            generatePayoffBarChart();
+            generatePayoffRadarChart();
+        }
+
+        function generatePayoffBarChart() {
+            const ctx = document.getElementById('payoffBarChart').getContext('2d');
+
+            if (payoffBarChartInstance) {
+                payoffBarChartInstance.destroy();
+            }
+
+            const datasets = payoffMatrix.map((row, i) => ({
+                label: alternatives[i],
+                data: row,
+                backgroundColor: chartColors[i % chartColors.length],
+                borderColor: chartColors[i % chartColors.length].replace('0.7', '1'),
+                borderWidth: 1
+            }));
+
+            payoffBarChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: states,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Perbandingan Biaya Antar Alternatif'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nilai Biaya'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Kondisi (States)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generatePayoffRadarChart() {
+            const ctx = document.getElementById('payoffRadarChart').getContext('2d');
+
+            if (payoffRadarChartInstance) {
+                payoffRadarChartInstance.destroy();
+            }
+
+            const datasets = payoffMatrix.map((row, i) => ({
+                label: alternatives[i],
+                data: row,
+                backgroundColor: chartColors[i % chartColors.length],
+                borderColor: chartColors[i % chartColors.length].replace('0.7', '1'),
+                borderWidth: 2,
+                pointBackgroundColor: chartColors[i % chartColors.length].replace('0.7', '1'),
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: chartColors[i % chartColors.length].replace('0.7', '1')
+            }));
+
+            payoffRadarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: states,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Radar Chart Perbandingan Alternatif (Biaya)'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nilai Biaya'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateProbabilityChart(probabilities) {
+            const ctx = document.getElementById('probabilityPieChart').getContext('2d');
+
+            if (probabilityPieChartInstance) {
+                probabilityPieChartInstance.destroy();
+            }
+
+            probabilityPieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: states,
+                    datasets: [{
+                        data: probabilities,
+                        backgroundColor: chartColors.slice(0, states.length),
+                        borderColor: chartColors.slice(0, states.length).map(color => color.replace('0.7', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribusi Probabilitas'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateSensitivityChart(expectedValues) {
+            const ctx = document.getElementById('sensitivityLineChart').getContext('2d');
+
+            if (sensitivityLineChartInstance) {
+                sensitivityLineChartInstance.destroy();
+            }
+
+            // Generate sensitivity data by varying first probability
+            const sensitivityData = [];
+            for (let p1 = 0; p1 <= 1; p1 += 0.1) {
+                const remainingProb = (1 - p1) / (states.length - 1);
+                const probs = [p1, ...Array(states.length - 1).fill(remainingProb)];
+
+                const evs = payoffMatrix.map(row =>
+                    row.reduce((sum, payoff, j) => sum + payoff * probs[j], 0)
+                );
+
+                sensitivityData.push({
+                    x: p1,
+                    alternatives: evs
+                });
+            }
+
+            const datasets = alternatives.map((alt, i) => ({
+                label: alt,
+                data: sensitivityData.map(d => ({ x: d.x, y: d.alternatives[i] })),
+                borderColor: chartColors[i % chartColors.length].replace('0.7', '1'),
+                backgroundColor: chartColors[i % chartColors.length],
+                borderWidth: 2,
+                fill: false
+            }));
+
+            sensitivityLineChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Analisis Sensitivitas: Variasi Probabilitas ${states[0]}`
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: `Probabilitas ${states[0]}`
+                            },
+                            min: 0,
+                            max: 1
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Expected Cost'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-generate initial matrix on page load
+            generateMatrixInputs();
+        });
+    </script>
+</body>
+
+</html>
